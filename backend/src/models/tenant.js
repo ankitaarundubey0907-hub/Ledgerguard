@@ -1,6 +1,6 @@
 const mongoose=require("mongoose")
 
-const tenantScheme=new mongoose.Schema({
+const tenantSchema=new mongoose.Schema({
     name:{
     type:String,
     required:true,
@@ -16,3 +16,4 @@ const tenantScheme=new mongoose.Schema({
 {
 timestamps:true
 });
+module.exports = mongoose.model("Tenant", tenantSchema);
