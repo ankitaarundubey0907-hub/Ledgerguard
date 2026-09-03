@@ -38,7 +38,9 @@ const getTransactions = async (req, res) => {
     try {
         const transactions = await Transaction.find({
             tenantId: req.user.tenantId
-        }).sort({ createdAt: -1 });
+        })
+        .populate("userId", "name email role")
+    .sort({ createdAt: -1 });
 
         res.status(200).json({
             success: true,

@@ -62,12 +62,13 @@ const createUser = async (req, res) => {
         });
     }
 };
-
 const getUsers = async (req, res) => {
     try {
         const users = await User.find({
             tenantId: req.user.tenantId
-        }).select("-password");
+        })
+            .select("-password")
+            .populate("tenantId", "name");
 
         res.status(200).json({
             success: true,
