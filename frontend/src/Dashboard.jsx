@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import "./Dashboard.css";
 
 function Dashboard({ setIsLoggedIn }) {
-  const [transactions, setTransactions] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [user, setUser] = useState(null);
-  const [companyName, setCompanyName] = useState("");
+  // =========================
+  // TRANSACTION STATE
+  // =========================
 
+  const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -15,45 +15,27 @@ function Dashboard({ setIsLoggedIn }) {
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
 
+  // =========================
+  // USER / COMPANY STATE
+  // =========================
+
+  const [users, setUsers] = useState([]);
+  const [companyName, setCompanyName] = useState("Your Company");
+
   const [employeeName, setEmployeeName] = useState("");
   const [employeeEmail, setEmployeeEmail] = useState("");
   const [employeePassword, setEmployeePassword] = useState("");
-  const [employeeMessage, setEmployeeMessage] = useState("");
+  const [userMessage, setUserMessage] = useState("");
 
   // =========================
-  // FETCH DASHBOARD DATA
+  // FETCH TRANSACTIONS
   // =========================
 
-  const fetchDashboardData = async () => {
+  const fetchTransactions = async () => {
     try {
       const token = localStorage.getItem("token");
 
-      if (!token) {
-        setIsLoggedIn(false);
-        return;
-      }
-
-      // Get current user
-      const userResponse = await fetch(
-        "http://localhost:5000/api/auth/me",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (userResponse.ok) {
-        const userData = await userResponse.json();
-
-        if (userData.success) {
-          setUser(userData.data.user);
-          setCompanyName(userData.data.companyName);
-        }
-      }
-
-      // Get transactions
-      const transactionResponse = await fetch(
+      const response = await fetch(
         "http://localhost:5000/api/transactions",
         {
           headers: {
@@ -62,30 +44,12 @@ function Dashboard({ setIsLoggedIn }) {
         }
       );
 
-      const transactionData = await transactionResponse.json();
+      const data = await response.json();
 
-      if (transactionData.success) {
-        setTransactions(transactionData.data);
+      if (data.success) {
+        setTransactions(data.data);
       } else {
-        setError(transactionData.message);
-      }
-
-      // Get company users
-      const usersResponse = await fetch(
-        "http://localhost:5000/api/users",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (usersResponse.ok) {
-        const usersData = await usersResponse.json();
-
-        if (usersData.success) {
-          setUsers(usersData.data);
-        }
+        setError(data.message);
       }
     } catch (error) {
       console.error(error);
@@ -95,8 +59,51 @@ function Dashboard({ setIsLoggedIn }) {
     }
   };
 
+  // =========================
+  // FETCH USERS
+  // =========================
+
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(
+        "http://localhost:5000/api/users",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        setUsers(data.data);
+
+        // Get company name from tenant
+        if (
+          data.data.length > 0 &&
+          data.data[0].tenantId
+        ) {
+          setCompanyName(data.data[0].tenantId.name);
+        }
+      } else {
+        setUserMessage(data.message);
+      }
+    } catch (error) {
+      console.error(error);
+      setUserMessage("Cannot connect to backend");
+    }
+  };
+
+  // =========================
+  // INITIAL LOAD
+  // =========================
+
   useEffect(() => {
-    fetchDashboardData();
+    fetchTransactions();
+    fetchUsers();
   }, []);
 
   // =========================
@@ -134,7 +141,7 @@ function Dashboard({ setIsLoggedIn }) {
         setDescription("");
         setCategory("");
 
-        await fetchDashboardData();
+        await fetchTransactions();
       } else {
         setError(data.message);
       }
@@ -150,9 +157,7 @@ function Dashboard({ setIsLoggedIn }) {
 
   const handleAddEmployee = async (e) => {
     e.preventDefault();
-
-    setEmployeeMessage("");
-    setError("");
+    setUserMessage("");
 
     try {
       const token = localStorage.getItem("token");
@@ -180,15 +185,15 @@ function Dashboard({ setIsLoggedIn }) {
         setEmployeeEmail("");
         setEmployeePassword("");
 
-        setEmployeeMessage("Employee added successfully!");
+        setUserMessage("Employee added successfully!");
 
-        await fetchDashboardData();
+        await fetchUsers();
       } else {
-        setEmployeeMessage(data.message || "Failed to add employee");
+        setUserMessage(data.message);
       }
     } catch (error) {
       console.error(error);
-      setEmployeeMessage("Cannot connect to backend");
+      setUserMessage("Cannot connect to backend");
     }
   };
 
@@ -198,13 +203,11 @@ function Dashboard({ setIsLoggedIn }) {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("user");
-
     setIsLoggedIn(false);
   };
 
   // =========================
-  // CALCULATE FINANCES
+  // FINANCIAL CALCULATIONS
   // =========================
 
   const income = transactions
@@ -250,7 +253,9 @@ function Dashboard({ setIsLoggedIn }) {
   return (
     <div className="dashboard">
 
-      {/* ================= NAVBAR ================= */}
+      {/* =========================
+          NAVBAR
+      ========================= */}
 
       <header className="navbar">
 
@@ -266,8 +271,6 @@ function Dashboard({ setIsLoggedIn }) {
 
         </div>
 
-        {/* Username REMOVED from here */}
-
         <button
           className="logout-button"
           onClick={handleLogout}
@@ -277,29 +280,41 @@ function Dashboard({ setIsLoggedIn }) {
 
       </header>
 
-      {/* ================= MAIN ================= */}
+
+      {/* =========================
+          MAIN
+      ========================= */}
 
       <main className="dashboard-content">
 
-        {/* ================= WELCOME ================= */}
+        {/* =========================
+            COMPANY HEADER
+        ========================= */}
 
         <div className="welcome-section">
-  <div>
-    <h1>
-      {companyName || "Company"}
-    </h1>
 
-    <p>
-      Welcome, Ankita 👋
-    </p>
+          <div>
 
-    <p>
-      Here's your financial overview.
-    </p>
-  </div>
-</div>
+            <h1>
+              {companyName}
+            </h1>
 
-        {/* ================= SUMMARY CARDS ================= */}
+            <p>
+              Welcome, Sanjana 👋
+            </p>
+
+            <p>
+              Here's your financial overview.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        {/* =========================
+            SUMMARY CARDS
+        ========================= */}
 
         <div className="summary-grid">
 
@@ -321,6 +336,7 @@ function Dashboard({ setIsLoggedIn }) {
 
           </div>
 
+
           {/* INCOME */}
 
           <div className="summary-card income-card">
@@ -338,6 +354,7 @@ function Dashboard({ setIsLoggedIn }) {
             </div>
 
           </div>
+
 
           {/* EXPENSE */}
 
@@ -359,9 +376,12 @@ function Dashboard({ setIsLoggedIn }) {
 
         </div>
 
-        {/* ================= TEAM SECTION ================= */}
 
-        <div className="dashboard-grid">
+        {/* =========================
+            TEAM + ADD EMPLOYEE
+        ========================= */}
+
+        <div className="team-section">
 
           {/* TEAM MEMBERS */}
 
@@ -380,34 +400,36 @@ function Dashboard({ setIsLoggedIn }) {
               {users.length === 0 ? (
 
                 <div className="empty-state">
+
                   <p>
                     No team members found.
                   </p>
+
                 </div>
 
               ) : (
 
-                users.map((member) => (
+                users.map((user) => (
 
                   <div
                     className="team-member"
-                    key={member._id}
+                    key={user._id}
                   >
 
                     <div>
 
                       <strong>
-                        {member.name}
+                        {user.name}
                       </strong>
 
                       <p>
-                        {member.email}
+                        {user.email}
                       </p>
 
                     </div>
 
                     <span className="role-badge">
-                      {member.role}
+                      {user.role}
                     </span>
 
                   </div>
@@ -419,6 +441,7 @@ function Dashboard({ setIsLoggedIn }) {
             </div>
 
           </section>
+
 
           {/* ADD EMPLOYEE */}
 
@@ -446,10 +469,13 @@ function Dashboard({ setIsLoggedIn }) {
                 placeholder="Employee name"
                 value={employeeName}
                 onChange={(e) =>
-                  setEmployeeName(e.target.value)
+                  setEmployeeName(
+                    e.target.value
+                  )
                 }
                 required
               />
+
 
               <label>
                 Email
@@ -460,10 +486,13 @@ function Dashboard({ setIsLoggedIn }) {
                 placeholder="Employee email"
                 value={employeeEmail}
                 onChange={(e) =>
-                  setEmployeeEmail(e.target.value)
+                  setEmployeeEmail(
+                    e.target.value
+                  )
                 }
                 required
               />
+
 
               <label>
                 Password
@@ -474,10 +503,13 @@ function Dashboard({ setIsLoggedIn }) {
                 placeholder="Temporary password"
                 value={employeePassword}
                 onChange={(e) =>
-                  setEmployeePassword(e.target.value)
+                  setEmployeePassword(
+                    e.target.value
+                  )
                 }
                 required
               />
+
 
               <button
                 className="add-button"
@@ -488,10 +520,10 @@ function Dashboard({ setIsLoggedIn }) {
 
             </form>
 
-            {employeeMessage && (
+            {userMessage && (
 
-              <p className="dashboard-success">
-                {employeeMessage}
+              <p className="dashboard-error">
+                {userMessage}
               </p>
 
             )}
@@ -500,7 +532,10 @@ function Dashboard({ setIsLoggedIn }) {
 
         </div>
 
-        {/* ================= TRANSACTIONS ================= */}
+
+        {/* =========================
+            TRANSACTIONS SECTION
+        ========================= */}
 
         <div className="dashboard-grid">
 
@@ -515,6 +550,7 @@ function Dashboard({ setIsLoggedIn }) {
             <p className="panel-subtitle">
               Record your income or expenses.
             </p>
+
 
             <form
               className="transaction-form"
@@ -542,6 +578,7 @@ function Dashboard({ setIsLoggedIn }) {
 
               </select>
 
+
               <label>
                 Amount
               </label>
@@ -557,6 +594,7 @@ function Dashboard({ setIsLoggedIn }) {
                 required
               />
 
+
               <label>
                 Description
               </label>
@@ -566,10 +604,13 @@ function Dashboard({ setIsLoggedIn }) {
                 placeholder="e.g. Office supplies"
                 value={description}
                 onChange={(e) =>
-                  setDescription(e.target.value)
+                  setDescription(
+                    e.target.value
+                  )
                 }
                 required
               />
+
 
               <label>
                 Category
@@ -580,10 +621,13 @@ function Dashboard({ setIsLoggedIn }) {
                 placeholder="e.g. Office"
                 value={category}
                 onChange={(e) =>
-                  setCategory(e.target.value)
+                  setCategory(
+                    e.target.value
+                  )
                 }
                 required
               />
+
 
               <button
                 className="add-button"
@@ -603,6 +647,7 @@ function Dashboard({ setIsLoggedIn }) {
             )}
 
           </section>
+
 
           {/* RECENT TRANSACTIONS */}
 
@@ -627,6 +672,7 @@ function Dashboard({ setIsLoggedIn }) {
               </span>
 
             </div>
+
 
             <div className="transaction-list">
 
@@ -665,6 +711,7 @@ function Dashboard({ setIsLoggedIn }) {
 
                         </div>
 
+
                         <div>
 
                           <strong>
@@ -678,6 +725,7 @@ function Dashboard({ setIsLoggedIn }) {
                         </div>
 
                       </div>
+
 
                       <div
                         className={`transaction-amount ${
