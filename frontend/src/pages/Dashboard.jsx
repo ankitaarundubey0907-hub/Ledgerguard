@@ -1,3 +1,4 @@
+
 import "./Dashboard.css";
 
 function Dashboard() {
@@ -34,6 +35,11 @@ function Dashboard() {
             Transactions
           </a>
 
+          <a href="/employees" className="menu-item">
+            <span>👥</span>
+            Employees
+          </a>
+
           <a href="/analytics" className="menu-item">
             <span>◉</span>
             Analytics
@@ -67,6 +73,7 @@ function Dashboard() {
 
           <div className="admin-profile">
             <div className="admin-circle">A</div>
+
             <div>
               <strong>Admin</strong>
               <small>Administrator</small>
@@ -81,6 +88,7 @@ function Dashboard() {
 
           <div className="stat-card">
             <div className="stat-icon">👥</div>
+
             <div>
               <p>Total Tenants</p>
               <h2>12</h2>
@@ -91,6 +99,7 @@ function Dashboard() {
 
           <div className="stat-card">
             <div className="stat-icon">📄</div>
+
             <div>
               <p>Total Invoices</p>
               <h2>48</h2>
@@ -101,6 +110,7 @@ function Dashboard() {
 
           <div className="stat-card">
             <div className="stat-icon">↔</div>
+
             <div>
               <p>Transactions</p>
               <h2>156</h2>
@@ -111,6 +121,7 @@ function Dashboard() {
 
           <div className="stat-card">
             <div className="stat-icon">₹</div>
+
             <div>
               <p>Total Revenue</p>
               <h2>₹24,500</h2>
@@ -125,6 +136,7 @@ function Dashboard() {
         <section className="content-card">
 
           <div className="section-header">
+
             <div>
               <h2>Recent Transactions</h2>
               <p>Latest billing and payment activities</p>
@@ -133,6 +145,7 @@ function Dashboard() {
             <button className="view-button">
               View All
             </button>
+
           </div>
 
 
@@ -157,18 +170,21 @@ function Dashboard() {
                   <td>ABC Enterprises</td>
                   <td>₹5,000</td>
                   <td>03 Sep 2026</td>
+
                   <td>
                     <span className="status success">
                       Success
                     </span>
                   </td>
                 </tr>
+
 
                 <tr>
                   <td>#TRX002</td>
                   <td>XYZ Solutions</td>
                   <td>₹3,500</td>
                   <td>03 Sep 2026</td>
+
                   <td>
                     <span className="status success">
                       Success
@@ -176,11 +192,13 @@ function Dashboard() {
                   </td>
                 </tr>
 
+
                 <tr>
                   <td>#TRX003</td>
                   <td>TechNova Pvt Ltd</td>
                   <td>₹7,200</td>
                   <td>02 Sep 2026</td>
+
                   <td>
                     <span className="status pending">
                       Pending
@@ -188,11 +206,13 @@ function Dashboard() {
                   </td>
                 </tr>
 
+
                 <tr>
                   <td>#TRX004</td>
                   <td>Global Industries</td>
                   <td>₹4,800</td>
                   <td>02 Sep 2026</td>
+
                   <td>
                     <span className="status success">
                       Success
@@ -200,11 +220,13 @@ function Dashboard() {
                   </td>
                 </tr>
 
+
                 <tr>
                   <td>#TRX005</td>
                   <td>Smart Systems</td>
                   <td>₹2,900</td>
                   <td>01 Sep 2026</td>
+
                   <td>
                     <span className="status failed">
                       Failed
@@ -231,15 +253,18 @@ function Dashboard() {
               <span>September 2026</span>
             </div>
 
+
             <div className="invoice-row">
               <span>Paid Invoices</span>
               <strong>32</strong>
             </div>
 
+
             <div className="invoice-row">
               <span>Pending Invoices</span>
               <strong>10</strong>
             </div>
+
 
             <div className="invoice-row">
               <span>Overdue Invoices</span>
@@ -256,20 +281,28 @@ function Dashboard() {
               <span>Live</span>
             </div>
 
+
             <div className="system-status">
+
               <span className="online-dot"></span>
+
               <div>
                 <strong>All Systems Operational</strong>
                 <p>Backend API is running normally</p>
               </div>
+
             </div>
 
+
             <div className="system-status">
+
               <span className="online-dot"></span>
+
               <div>
                 <strong>Database Connected</strong>
                 <p>MongoDB connection active</p>
               </div>
+
             </div>
 
           </div>
@@ -283,3 +316,4 @@ function Dashboard() {
 }
 
 export default Dashboard;
+
