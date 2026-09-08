@@ -1,32 +1,38 @@
-const express=require("express")
-const dotenv=require("dotenv")
+const express = require("express");
+const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authroutes");
 const transactionRoutes = require("./routes/transactionroutes");
 const userRoutes = require("./routes/userroutes");
+const employeeRoutes = require("./routes/employeeroutes");
 const cors = require("cors");
 
-dotenv.config()
+dotenv.config();
 
+const app = express();
 
-const app=express();
 app.use(cors());
-app.use(express.json())
+app.use(express.json());
 
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/employees", employeeRoutes);
 
+// Connect Database
 connectDB();
 
-app.get("/health",(req,res)=>{
-   res.json({
+// Health Check
+app.get("/health", (req, res) => {
+    res.json({
         success: true,
         message: "LedgerGuard backend is running"
-    });  
-})
-const port= process.env.port || 5000;
+    });
+});
 
-app.listen(port,()=>{
+const port = process.env.port || 5000;
+
+app.listen(port, () => {
     console.log(`LedgerGuard server running on port ${port}`);
 });
