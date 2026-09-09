@@ -56,6 +56,17 @@ const getTransactions = async (req, res) => {
     }
 };
 
+const updateTransaction=async(req,res)=>{
+    try{
+    const {id}= req.params;
+     const { type, amount, description, category } = req.body;
+    }
+    catch{
+
+    }
+
+}
+
 module.exports = {
     createTransaction,
     getTransactions
