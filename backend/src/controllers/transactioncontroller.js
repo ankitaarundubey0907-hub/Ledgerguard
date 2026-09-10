@@ -1,5 +1,10 @@
 const Transaction = require("../models/transaction");
-
+const {
+    createTransaction: createTransactionService,
+    getTransactions: getTransactionsService,
+    updateTransaction: updateTransactionService,
+    deleteTransaction: deleteTransactionService
+} = require("../services/transactionservices");
 const createTransaction = async (req, res) => {
     try {
         const { type, amount, description, category } = req.body;
@@ -59,15 +64,88 @@ const getTransactions = async (req, res) => {
 const updateTransaction=async(req,res)=>{
     try{
     const {id}= req.params;
-     const { type, amount, description, category } = req.body;
+     const { type, amount, description, category,date } = req.body;
+     const tenantId=req.user.tenantId;
+     const transaction=await Transaction.findOne({
+        _id: id,
+            tenantId: tenantId
+     });
+     if(!transaction){
+        return res.satus(404).json({
+             success: false,
+             message: "Transaction not found"
+        });
+     }
+          if (amount !== undefined) {
+            transaction.amount = amount;
+        }
+
+        if (type !== undefined) {
+            transaction.type = type;
+        }
+
+        if (category !== undefined) {
+            transaction.category = category;
+        }
+
+        if (description !== undefined) {
+            transaction.description = description;
+        }
+
+        if (date !== undefined) {
+            transaction.date = date;
+        }
+    await transaction.save();
+            res.status(200).json({
+            success: true,
+            message: "Transaction updated successfully",
+            data: transaction
+        });
+
+
+}
+    catch(error){
+ res.status(500).json({
+            success: false,
+            message: error.message
+        });
     }
-    catch{
+
+}
+const deleteTransaction=async(req,res)=>{
+    try{
+      const {id}= req.params;
+     const tenantId=req.user.tenantId;
+     const transaction=await Transaction.findOne({
+        _id: id,
+            tenantId: tenantId
+     });
+      if(!transaction){
+        return res.status(404).json({
+             success: false,
+             message: "Transaction not found"
+        });
+     }
+     await Transaction.deleteOne({
+        _id:id,
+        tenantId:tenanatId
+     });
+        res.status(200).json({
+            success: true,
+            message: "Transaction deleted successfully"
+        });
+    }
+    catch(error){
+        res.status(500).json({
+            success:false,
+            message:error.message
+        })
 
     }
-
 }
 
 module.exports = {
     createTransaction,
-    getTransactions
+    getTransactions,updateTransaction,
+    deleteTransaction
 };
