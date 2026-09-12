@@ -9,7 +9,18 @@ const createTransaction = async (req, res) => {
     try {
         const { type, amount, description, category } = req.body;
 
-        if (!type || !amount || !description || !category) {
+        if (
+    !type ||
+    amount === undefined ||
+    amount === null ||
+    !description ||
+    !category
+) {
+    return res.status(400).json({
+        success: false,
+        message: "All fields are required"
+    });
+}if (!type || !amount || !description || !category) {
             return res.status(400).json({
                 success: false,
                 message: "All fields are required"
@@ -41,11 +52,23 @@ const createTransaction = async (req, res) => {
 
 const getTransactions = async (req, res) => {
     try {
-        const transactions = await Transaction.find({
+        const { type, category } = req.query;
+
+        const filter = {
             tenantId: req.user.tenantId
-        })
-        .populate("userId", "name email role")
-    .sort({ createdAt: -1 });
+        };
+
+        if (type) {
+            filter.type = type;
+        }
+
+        if (category) {
+            filter.category = category;
+        }
+
+        const transactions = await Transaction.find(filter)
+            .populate("userId", "name email role")
+            .sort({ createdAt: -1 });
 
         res.status(200).json({
             success: true,
@@ -71,7 +94,7 @@ const updateTransaction=async(req,res)=>{
             tenantId: tenantId
      });
      if(!transaction){
-        return res.satus(404).json({
+        return res.status(404).json({
              success: false,
              message: "Transaction not found"
         });
