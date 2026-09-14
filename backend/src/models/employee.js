@@ -15,7 +15,7 @@ const employeeSchema = new mongoose.Schema({
     },
 
     phone: {
-        type: String,
+        type: String,//ljj
         trim: true
     },
 
