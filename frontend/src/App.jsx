@@ -1,6 +1,16 @@
 import { useState } from "react";
-import Dashboard from "./Dashboard";
-import "./App.css";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
+import Tenants from "./pages/Tenants";
+import Invoices from "./pages/Invoices";
+import Transactions from "./pages/Transactions";
+import Analytics from "./pages/Analytics";
+import Settings from "./pages/Settings";
+import Employees from "./pages/Employees";
 
 function App() {
   const [isRegister, setIsRegister] = useState(false);
@@ -16,10 +26,6 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(
     !!localStorage.getItem("token")
   );
-
-  // =========================
-  // LOGIN
-  // =========================
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -43,13 +49,7 @@ function App() {
       const data = await response.json();
 
       if (data.success) {
-        // Save JWT token
-        localStorage.setItem(
-          "token",
-          data.data.token
-        );
-
-        // Save logged-in user
+        localStorage.setItem("token", data.data.token);
         localStorage.setItem(
           "user",
           JSON.stringify(data.data.user)
@@ -57,21 +57,13 @@ function App() {
 
         setIsLoggedIn(true);
       } else {
-        setMessage(
-          data.message || "Login failed"
-        );
+        setMessage(data.message || "Login failed");
       }
     } catch (error) {
       console.error(error);
-      setMessage(
-        "Cannot connect to backend"
-      );
+      setMessage("Cannot connect to backend");
     }
   };
-
-  // =========================
-  // REGISTER COMPANY
-  // =========================
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -114,63 +106,49 @@ function App() {
       }
     } catch (error) {
       console.error(error);
-      setMessage(
-        "Cannot connect to backend"
-      );
+      setMessage("Cannot connect to backend");
     }
   };
 
-  // =========================
-  // DASHBOARD
-  // =========================
-
   if (isLoggedIn) {
     return (
-      <Dashboard
-        setIsLoggedIn={setIsLoggedIn}
-      />
+      <BrowserRouter>
+        <Routes>
+          <Route
+            path="*"
+            element={
+              <Dashboard setIsLoggedIn={setIsLoggedIn} />
+            }
+          />
+          <Route
+            path="/employees"
+            element={<Employees />}
+          />
+        </Routes>
+      </BrowserRouter>
     );
   }
 
-  // =========================
-  // LOGIN / REGISTER PAGE
-  // =========================
-
   return (
     <div className="login-page">
-
       <div className="login-card">
 
-        {/* BRAND */}
-
         <div className="brand">
-
-          <div className="brand-icon">
-            L
-          </div>
+          <div className="brand-icon">L</div>
 
           <h1>
             Ledger<span>Guard</span>
           </h1>
-
         </div>
 
         <p className="login-subtitle">
           Smart financial management for your business
         </p>
 
-
-        {/* =========================
-            REGISTER
-        ========================= */}
-
         {isRegister ? (
-
           <form onSubmit={handleRegister}>
 
-            <label>
-              Company Name
-            </label>
+            <label>Company Name</label>
 
             <input
               type="text"
@@ -182,10 +160,7 @@ function App() {
               required
             />
 
-
-            <label>
-              Admin Name
-            </label>
+            <label>Admin Name</label>
 
             <input
               type="text"
@@ -197,10 +172,7 @@ function App() {
               required
             />
 
-
-            <label>
-              Email Address
-            </label>
+            <label>Email Address</label>
 
             <input
               type="email"
@@ -212,10 +184,7 @@ function App() {
               required
             />
 
-
-            <label>
-              Password
-            </label>
+            <label>Password</label>
 
             <input
               type="password"
@@ -227,7 +196,6 @@ function App() {
               required
             />
 
-
             <button
               className="login-button"
               type="submit"
@@ -236,18 +204,10 @@ function App() {
             </button>
 
           </form>
-
         ) : (
-
-          /* =========================
-             LOGIN
-          ========================= */
-
           <form onSubmit={handleLogin}>
 
-            <label>
-              Email Address
-            </label>
+            <label>Email Address</label>
 
             <input
               type="email"
@@ -259,10 +219,7 @@ function App() {
               required
             />
 
-
-            <label>
-              Password
-            </label>
+            <label>Password</label>
 
             <input
               type="password"
@@ -274,7 +231,6 @@ function App() {
               required
             />
 
-
             <button
               className="login-button"
               type="submit"
@@ -283,20 +239,13 @@ function App() {
             </button>
 
           </form>
-
         )}
-
-
-        {/* MESSAGE */}
 
         {message && (
           <p className="error-message">
             {message}
           </p>
         )}
-
-
-        {/* SWITCH */}
 
         <button
           type="button"
@@ -311,13 +260,11 @@ function App() {
             : "New company? Create an account"}
         </button>
 
-
         <p className="login-footer">
           Secure business finance management
         </p>
 
       </div>
-
     </div>
   );
 }
