@@ -22,7 +22,7 @@ const employeeSchema = new mongoose.Schema({
     role: {
         type: String,
         required: true,
-        trim: true
+        trim: true//okdone
     },
 
     department: {
