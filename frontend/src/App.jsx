@@ -12,6 +12,7 @@ import Transactions from "./pages/Transactions";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import Employees from "./pages/Employees";
+import Notifications from "./pages/Notifications";
 
 function App() {
   const [isRegister, setIsRegister] = useState(false);
@@ -137,6 +138,12 @@ function App() {
           <Route
             path="/settings"
             element={<Settings />}
+          />
+
+          {/* Notifications */}
+          <Route
+            path="/notifications"
+            element={<Notifications />}
           />
 
         </Routes>
@@ -295,4 +302,3 @@ function App() {
 }
 
 export default App;
-
