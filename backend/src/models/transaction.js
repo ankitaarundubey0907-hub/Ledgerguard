@@ -1,11 +1,13 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
 
-const transactionSchema = new mongoose.Schema({
+const transactionSchema = new mongoose.Schema(
+    {
         type: {
             type: String,
             enum: ["income", "expense"],
             required: true
         },
+
         amount: {
             type: Number,
             required: true,
@@ -23,20 +25,31 @@ const transactionSchema = new mongoose.Schema({
             required: true,
             trim: true
         },
+
+        // Encrypted sensitive financial information
+        sensitiveData: {
+            type: String,
+            default: null
+        },
+
         userId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
             required: true
         },
+
         tenantId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Tenant",
             required: true
         }
-    }, {
+    },
+    {
         timestamps: true
     }
-
-
 );
-module.exports = mongoose.model("Transaction", transactionSchema);
+
+module.exports = mongoose.model(
+    "Transaction",
+    transactionSchema
+);

@@ -1,7 +1,15 @@
-port = 5000
+require("dotenv").config();
 
-MONGODB_URI = mongodb: //127.0.0.1:27017/ledgerguard
+module.exports = {
+    PORT: process.env.PORT || 5000,
 
-    JWT_SECRET = your_jwt_secret
+    MONGODB_URI: process.env.MONGODB_URI,
 
-REDIS_URL = redis: //localhost:6379
+    JWT_SECRET: process.env.JWT_SECRET,
+
+    REDIS_URL: process.env.REDIS_URL,
+
+    RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
+
+    RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET
+};

@@ -2,6 +2,7 @@ require("dotenv").config();
 
 console.log("RAZORPAY KEY:", process.env.RAZORPAY_KEY_ID);
 
+const { connectRedis } = require("./config/redis");
 const express = require("express");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
@@ -10,6 +11,8 @@ const transactionRoutes = require("./routes/transactionroutes");
 const userRoutes = require("./routes/userroutes");
 const employeeRoutes = require("./routes/employeeroutes");
 const paymentRoutes = require("./routes/paymentroutes");
+const subscriptionRoutes = require("./routes/subscriptionroutes");
+const auditLogRoutes = require("./routes/auditlogroutes");
 
 const cors = require("cors");
 
@@ -26,10 +29,13 @@ app.use("/api/transactions", transactionRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/payment", paymentRoutes);
-
+app.use("/api/subscriptions", subscriptionRoutes);
+app.use("/api/audit-logs", auditLogRoutes);
 
 // Connect Database
 connectDB();
+//connect redis
+connectRedis();
 
 // Health Check
 app.get("/health", (req, res) => {
