@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
@@ -50,6 +51,7 @@ function App() {
 
       if (data.success) {
         localStorage.setItem("token", data.data.token);
+
         localStorage.setItem(
           "user",
           JSON.stringify(data.data.user)
@@ -114,16 +116,29 @@ function App() {
     return (
       <BrowserRouter>
         <Routes>
+
+          {/* Dashboard */}
           <Route
             path="*"
             element={
-              <Dashboard setIsLoggedIn={setIsLoggedIn} />
+              <Dashboard
+                setIsLoggedIn={setIsLoggedIn}
+              />
             }
           />
+
+          {/* Employees */}
           <Route
             path="/employees"
             element={<Employees />}
           />
+
+          {/* Settings */}
+          <Route
+            path="/settings"
+            element={<Settings />}
+          />
+
         </Routes>
       </BrowserRouter>
     );
@@ -131,14 +146,19 @@ function App() {
 
   return (
     <div className="login-page">
+
       <div className="login-card">
 
         <div className="brand">
-          <div className="brand-icon">L</div>
+
+          <div className="brand-icon">
+            L
+          </div>
 
           <h1>
             Ledger<span>Guard</span>
           </h1>
+
         </div>
 
         <p className="login-subtitle">
@@ -146,6 +166,7 @@ function App() {
         </p>
 
         {isRegister ? (
+
           <form onSubmit={handleRegister}>
 
             <label>Company Name</label>
@@ -204,7 +225,9 @@ function App() {
             </button>
 
           </form>
+
         ) : (
+
           <form onSubmit={handleLogin}>
 
             <label>Email Address</label>
@@ -239,6 +262,7 @@ function App() {
             </button>
 
           </form>
+
         )}
 
         {message && (
@@ -265,8 +289,10 @@ function App() {
         </p>
 
       </div>
+
     </div>
   );
 }
 
 export default App;
+

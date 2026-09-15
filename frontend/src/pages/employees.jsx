@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import socket from "../services/socket";
 
 const Employees = () => {
     const [employees, setEmployees] = useState([]);
@@ -21,6 +22,24 @@ const Employees = () => {
     const [message, setMessage] = useState("");
     const [loading, setLoading] = useState(false);
 
+    const [editingId, setEditingId] = useState(null);
+
+    // GET LOGGED-IN USER ROLE
+    const storedUser = localStorage.getItem("user");
+
+    let currentUser = null;
+
+    try {
+        currentUser = storedUser
+            ? JSON.parse(storedUser)
+            : null;
+    } catch (error) {
+        currentUser = null;
+    }
+
+    const isAdmin = currentUser?.role === "admin";
+
+    // FETCH EMPLOYEES
     const fetchEmployees = async () => {
         try {
             const token = localStorage.getItem("token");
@@ -56,7 +75,9 @@ const Employees = () => {
             if (data.success) {
                 setEmployees(data.data);
             } else {
-                setMessage(data.message || "Failed to load employees");
+                setMessage(
+                    data.message || "Failed to load employees"
+                );
             }
 
         } catch (error) {
@@ -64,12 +85,93 @@ const Employees = () => {
         }
     };
 
-
+    // FETCH WHEN SEARCH / FILTER CHANGES
     useEffect(() => {
         fetchEmployees();
     }, [search, department, status]);
 
+    // REAL-TIME SOCKET EVENTS
+    useEffect(() => {
+        const handleConnect = () => {
+            console.log(
+                "Socket connected from Employees page:",
+                socket.id
+            );
+        };
 
+        const handleConnectError = (error) => {
+            console.log(
+                "Socket connection error:",
+                error.message
+            );
+        };
+
+        const handleEmployeeAdded = () => {
+            console.log("Real-time employee added");
+            fetchEmployees();
+        };
+
+        const handleEmployeeUpdated = () => {
+            console.log("Real-time employee updated");
+            fetchEmployees();
+        };
+
+        const handleEmployeeDeleted = () => {
+            console.log("Real-time employee deleted");
+            fetchEmployees();
+        };
+
+        socket.on("connect", handleConnect);
+
+        socket.on(
+            "connect_error",
+            handleConnectError
+        );
+
+        socket.on(
+            "employeeAdded",
+            handleEmployeeAdded
+        );
+
+        socket.on(
+            "employeeUpdated",
+            handleEmployeeUpdated
+        );
+
+        socket.on(
+            "employeeDeleted",
+            handleEmployeeDeleted
+        );
+
+        return () => {
+            socket.off(
+                "connect",
+                handleConnect
+            );
+
+            socket.off(
+                "connect_error",
+                handleConnectError
+            );
+
+            socket.off(
+                "employeeAdded",
+                handleEmployeeAdded
+            );
+
+            socket.off(
+                "employeeUpdated",
+                handleEmployeeUpdated
+            );
+
+            socket.off(
+                "employeeDeleted",
+                handleEmployeeDeleted
+            );
+        };
+    }, []);
+
+    // FORM CHANGE
     const handleChange = (e) => {
         setForm({
             ...form,
@@ -77,7 +179,23 @@ const Employees = () => {
         });
     };
 
+    // RESET FORM
+    const resetForm = () => {
+        setForm({
+            name: "",
+            email: "",
+            phone: "",
+            role: "",
+            department: "",
+            joiningDate: "",
+            salary: "",
+            status: "Active"
+        });
 
+        setEditingId(null);
+    };
+
+    // ADD / UPDATE EMPLOYEE
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -86,59 +204,135 @@ const Employees = () => {
 
         try {
             const token = localStorage.getItem("token");
-            console.log("TOKEN:", token);
+
+            const url = editingId
+                ? `http://localhost:5000/api/employees/${editingId}`
+                : "http://localhost:5000/api/employees";
+
+            const response = await fetch(url, {
+                method: editingId ? "PUT" : "POST",
+
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+
+                body: JSON.stringify({
+                    ...form,
+                    salary: form.salary
+                        ? Number(form.salary)
+                        : undefined
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setMessage(
+                    editingId
+                        ? "Employee updated successfully!"
+                        : "Employee added successfully!"
+                );
+
+                resetForm();
+
+                fetchEmployees();
+
+            } else {
+                setMessage(
+                    data.message ||
+                    (
+                        editingId
+                            ? "Failed to update employee"
+                            : "Failed to add employee"
+                    )
+                );
+            }
+
+        } catch (error) {
+            setMessage("Unable to connect to backend");
+
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // EDIT EMPLOYEE
+    const handleEdit = (employee) => {
+        setEditingId(employee._id);
+
+        setForm({
+            name: employee.name || "",
+            email: employee.email || "",
+            phone: employee.phone || "",
+            role: employee.role || "",
+            department: employee.department || "",
+            joiningDate: employee.joiningDate
+                ? employee.joiningDate.split("T")[0]
+                : "",
+            salary: employee.salary ?? "",
+            status: employee.status || "Active"
+        });
+
+        setMessage("");
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+    };
+
+    // DELETE EMPLOYEE
+    const handleDelete = async (id) => {
+        const confirmDelete = window.confirm(
+            "Are you sure you want to delete this employee?"
+        );
+
+        if (!confirmDelete) {
+            return;
+        }
+
+        try {
+            setMessage("");
+
+            const token = localStorage.getItem("token");
 
             const response = await fetch(
-                "http://localhost:5000/api/employees",
+                `http://localhost:5000/api/employees/${id}`,
                 {
-                    method: "POST",
-
+                    method: "DELETE",
                     headers: {
-                        "Content-Type": "application/json",
                         Authorization: `Bearer ${token}`
-                    },
-
-                    body: JSON.stringify({
-                        ...form,
-                        salary: form.salary
-                            ? Number(form.salary)
-                            : undefined
-                    })
+                    }
                 }
             );
 
             const data = await response.json();
 
             if (data.success) {
+                setMessage(
+                    "Employee deleted successfully!"
+                );
 
-                setMessage("Employee added successfully!");
-
-                setForm({
-                    name: "",
-                    email: "",
-                    phone: "",
-                    role: "",
-                    department: "",
-                    joiningDate: "",
-                    salary: "",
-                    status: "Active"
-                });
+                if (editingId === id) {
+                    resetForm();
+                }
 
                 fetchEmployees();
 
             } else {
                 setMessage(
-                    data.message || "Failed to add employee"
+                    data.message ||
+                    "Failed to delete employee"
                 );
             }
 
         } catch (error) {
-            setMessage("Unable to connect to backend");
-        } finally {
-            setLoading(false);
+            setMessage(
+                "Unable to connect to backend"
+            );
         }
     };
-
 
     return (
         <div style={{ padding: "30px" }}>
@@ -149,129 +343,151 @@ const Employees = () => {
                 Manage employees and their information
             </p>
 
+            {/* ADD / EDIT EMPLOYEE FORM - ADMIN ONLY */}
 
-            {/* Add Employee Form */}
+            {isAdmin && (
+                <div
+                    style={{
+                        marginTop: "25px",
+                        padding: "20px",
+                        border: "1px solid #ddd",
+                        borderRadius: "10px"
+                    }}
+                >
 
-            <div
-                style={{
-                    marginTop: "25px",
-                    padding: "20px",
-                    border: "1px solid #ddd",
-                    borderRadius: "10px"
-                }}
-            >
-
-                <h2>Add Employee</h2>
-
-                <form onSubmit={handleSubmit}>
-
-                    <div
-                        style={{
-                            display: "grid",
-                            gridTemplateColumns:
-                                "repeat(2, 1fr)",
-                            gap: "15px",
-                            marginTop: "15px"
-                        }}
-                    >
-
-                        <input
-                            type="text"
-                            name="name"
-                            placeholder="Employee Name"
-                            value={form.name}
-                            onChange={handleChange}
-                            required
-                        />
-
-                        <input
-                            type="email"
-                            name="email"
-                            placeholder="Email"
-                            value={form.email}
-                            onChange={handleChange}
-                            required
-                        />
-
-                        <input
-                            type="text"
-                            name="phone"
-                            placeholder="Phone Number"
-                            value={form.phone}
-                            onChange={handleChange}
-                        />
-
-                        <input
-                            type="text"
-                            name="role"
-                            placeholder="Role"
-                            value={form.role}
-                            onChange={handleChange}
-                            required
-                        />
-
-                        <input
-                            type="text"
-                            name="department"
-                            placeholder="Department"
-                            value={form.department}
-                            onChange={handleChange}
-                            required
-                        />
-
-                        <input
-                            type="date"
-                            name="joiningDate"
-                            value={form.joiningDate}
-                            onChange={handleChange}
-                        />
-
-                        <input
-                            type="number"
-                            name="salary"
-                            placeholder="Salary"
-                            value={form.salary}
-                            onChange={handleChange}
-                            min="0"
-                        />
-
-                        <select
-                            name="status"
-                            value={form.status}
-                            onChange={handleChange}
-                        >
-                            <option value="Active">
-                                Active
-                            </option>
-
-                            <option value="Inactive">
-                                Inactive
-                            </option>
-                        </select>
-
-                    </div>
-
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        style={{
-                            marginTop: "20px",
-                            padding: "10px 20px",
-                            cursor: "pointer"
-                        }}
-                    >
-                        {loading
-                            ? "Adding..."
+                    <h2>
+                        {editingId
+                            ? "Edit Employee"
                             : "Add Employee"}
-                    </button>
+                    </h2>
 
-                </form>
+                    <form onSubmit={handleSubmit}>
 
-            </div>
+                        <div
+                            style={{
+                                display: "grid",
+                                gridTemplateColumns:
+                                    "repeat(2, 1fr)",
+                                gap: "15px",
+                                marginTop: "15px"
+                            }}
+                        >
 
+                            <input
+                                type="text"
+                                name="name"
+                                placeholder="Employee Name"
+                                value={form.name}
+                                onChange={handleChange}
+                                required
+                            />
 
-            {/* Message */}
+                            <input
+                                type="email"
+                                name="email"
+                                placeholder="Email"
+                                value={form.email}
+                                onChange={handleChange}
+                                required
+                            />
+
+                            <input
+                                type="text"
+                                name="phone"
+                                placeholder="Phone Number"
+                                value={form.phone}
+                                onChange={handleChange}
+                            />
+
+                            <input
+                                type="text"
+                                name="role"
+                                placeholder="Role"
+                                value={form.role}
+                                onChange={handleChange}
+                                required
+                            />
+
+                            <input
+                                type="text"
+                                name="department"
+                                placeholder="Department"
+                                value={form.department}
+                                onChange={handleChange}
+                                required
+                            />
+
+                            <input
+                                type="date"
+                                name="joiningDate"
+                                value={form.joiningDate}
+                                onChange={handleChange}
+                            />
+
+                            <input
+                                type="number"
+                                name="salary"
+                                placeholder="Salary"
+                                value={form.salary}
+                                onChange={handleChange}
+                                min="0"
+                            />
+
+                            <select
+                                name="status"
+                                value={form.status}
+                                onChange={handleChange}
+                            >
+                                <option value="Active">
+                                    Active
+                                </option>
+
+                                <option value="Inactive">
+                                    Inactive
+                                </option>
+                            </select>
+
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            style={{
+                                marginTop: "20px",
+                                padding: "10px 20px",
+                                cursor: "pointer",
+                                marginRight: "10px"
+                            }}
+                        >
+                            {loading
+                                ? editingId
+                                    ? "Updating..."
+                                    : "Adding..."
+                                : editingId
+                                    ? "Update Employee"
+                                    : "Add Employee"}
+                        </button>
+
+                        {editingId && (
+                            <button
+                                type="button"
+                                onClick={resetForm}
+                                style={{
+                                    marginTop: "20px",
+                                    padding: "10px 20px",
+                                    cursor: "pointer"
+                                }}
+                            >
+                                Cancel
+                            </button>
+                        )}
+
+                    </form>
+
+                </div>
+            )}
+
+            {/* MESSAGE */}
 
             {message && (
                 <p
@@ -284,8 +500,7 @@ const Employees = () => {
                 </p>
             )}
 
-
-            {/* Search and Filters */}
+            {/* SEARCH AND FILTERS */}
 
             <div
                 style={{
@@ -316,7 +531,6 @@ const Employees = () => {
                             setSearch(e.target.value)
                         }
                     />
-
 
                     <select
                         value={department}
@@ -349,7 +563,6 @@ const Employees = () => {
                         </option>
                     </select>
 
-
                     <select
                         value={status}
                         onChange={(e) =>
@@ -373,17 +586,14 @@ const Employees = () => {
 
             </div>
 
-
-            {/* Employee List */}
+            {/* EMPLOYEE LIST */}
 
             <div style={{ marginTop: "30px" }}>
 
                 <h2>
-                    Employee List
-                    {" "}
+                    Employee List{" "}
                     ({employees.length})
                 </h2>
-
 
                 {employees.length === 0 ? (
 
@@ -421,10 +631,14 @@ const Employees = () => {
                                     <th>Joining Date</th>
                                     <th>Salary</th>
                                     <th>Status</th>
+
+                                    {isAdmin && (
+                                        <th>Actions</th>
+                                    )}
+
                                 </tr>
 
                             </thead>
-
 
                             <tbody>
 
@@ -493,8 +707,49 @@ const Employees = () => {
                                                 }
                                             </td>
 
-                                        </tr>
+                                            {isAdmin && (
+                                                <td>
 
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            handleEdit(
+                                                                employee
+                                                            )
+                                                        }
+                                                        style={{
+                                                            marginRight:
+                                                                "8px",
+                                                            padding:
+                                                                "6px 12px",
+                                                            cursor:
+                                                                "pointer"
+                                                        }}
+                                                    >
+                                                        Edit
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            handleDelete(
+                                                                employee._id
+                                                            )
+                                                        }
+                                                        style={{
+                                                            padding:
+                                                                "6px 12px",
+                                                            cursor:
+                                                                "pointer"
+                                                        }}
+                                                    >
+                                                        Delete
+                                                    </button>
+
+                                                </td>
+                                            )}
+
+                                        </tr>
                                     )
                                 )}
 
@@ -503,7 +758,6 @@ const Employees = () => {
                         </table>
 
                     </div>
-
                 )}
 
             </div>

@@ -1,40 +1,26 @@
 const express = require("express");
 
 const {
-    createUser,
-    getUsers,
-    getProfile,
-    updateProfile
-} = require("../controllers/usercontroller");
+    getCompanyProfile,
+    updateCompanyProfile
+} = require("../controllers/tenantcontroller");
 
 const authMiddleware = require("../middleware/authmiddleware");
 const authorizeRoles = require("../middleware/rolemiddleware");
 
 const router = express.Router();
 
-router.post(
-    "/",
-    authMiddleware,
-    authorizeRoles("admin"),
-    createUser
-);
-
-router.get(
-    "/",
-    authMiddleware,
-    getUsers
-);
-
 router.get(
     "/profile",
     authMiddleware,
-    getProfile
+    getCompanyProfile
 );
 
 router.put(
     "/profile",
     authMiddleware,
-    updateProfile
+    authorizeRoles("admin"),
+    updateCompanyProfile
 );
 
 module.exports = router;
