@@ -3,7 +3,9 @@ const {
     createTransaction: createTransactionService,
     getTransactions: getTransactionsService,
     updateTransaction: updateTransactionService,
-    deleteTransaction: deleteTransactionService
+    deleteTransaction: deleteTransactionService,
+    getFinancialSummary: getFinancialSummaryService,
+    getFinancialReport: getFinancialReportService
 } = require("../services/transactionservices");
 const createTransaction = async (req, res) => {
     try {
@@ -41,15 +43,75 @@ const createTransaction = async (req, res) => {
 
 const getTransactions = async (req, res) => {
     try {
-        const transactions = await Transaction.find({
+        const {
+            type,
+            category,
+            startDate,
+            endDate,
+            page = 1,
+            limit = 10
+        } = req.query;
+
+        const filter = {
             tenantId: req.user.tenantId
-        })
-        .populate("userId", "name email role")
-    .sort({ createdAt: -1 });
+        };
+
+        // Feature 2 filters
+        if (type) {
+            filter.type = type;
+        }
+
+        if (category) {
+            filter.category = category;
+        }
+
+        // Feature 3: Date range filtering
+        if (startDate || endDate) {
+            filter.createdAt = {};
+
+            if (startDate) {
+                filter.createdAt.$gte = new Date(startDate);
+            }
+
+            if (endDate) {
+                const end = new Date(endDate);
+                end.setHours(23, 59, 59, 999);
+                filter.createdAt.$lte = end;
+            }
+        }
+
+        // Pagination
+        const pageNumber = Math.max(parseInt(page), 1);
+        const limitNumber = Math.min(
+            Math.max(parseInt(limit), 1),
+            100
+        );
+
+        const skip = (pageNumber - 1) * limitNumber;
+
+        const totalTransactions = await Transaction.countDocuments(filter);
+
+        const transactions = await Transaction.find(filter)
+            .populate("userId", "name email role")
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limitNumber);
+
+        const totalPages = Math.ceil(
+            totalTransactions / limitNumber
+        );
 
         res.status(200).json({
             success: true,
             count: transactions.length,
+            pagination: {
+                currentPage: pageNumber,
+                limit: limitNumber,
+                totalTransactions,
+                totalPages,
+                hasNextPage: pageNumber < totalPages,
+                hasPreviousPage: pageNumber > 1
+            },
             data: transactions
         });
 
@@ -143,9 +205,52 @@ const deleteTransaction=async(req,res)=>{
 
     }
 }
+const getFinancialSummary = async (req, res) => {
+    try {
+        const summary = await getFinancialSummaryService(
+            req.user.tenantId
+        );
 
+        res.status(200).json({
+            success: true,
+            data: summary
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+const getFinancialReport = async (req, res) => {
+    try {
+        const { startDate, endDate } = req.query;
+
+        const report = await getFinancialReportService(
+            req.user.tenantId,
+            startDate,
+            endDate
+        );
+
+        res.status(200).json({
+            success: true,
+            data: report
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
 module.exports = {
     createTransaction,
-    getTransactions,updateTransaction,
-    deleteTransaction
+    getTransactions,
+    updateTransaction,
+    deleteTransaction,
+    getFinancialSummary,
+    getFinancialReport
 };

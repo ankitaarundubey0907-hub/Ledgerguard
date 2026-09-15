@@ -1,3 +1,7 @@
+require("dotenv").config();
+
+console.log("RAZORPAY KEY:", process.env.RAZORPAY_KEY_ID);
+
 const express = require("express");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
@@ -5,9 +9,11 @@ const authRoutes = require("./routes/authroutes");
 const transactionRoutes = require("./routes/transactionroutes");
 const userRoutes = require("./routes/userroutes");
 const employeeRoutes = require("./routes/employeeroutes");
+const paymentRoutes = require("./routes/paymentroutes");
+
 const cors = require("cors");
 
-dotenv.config();
+// dotenv.config();
 
 const app = express();
 
@@ -19,6 +25,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/employees", employeeRoutes);
+app.use("/api/payment", paymentRoutes);
+
 
 // Connect Database
 connectDB();
