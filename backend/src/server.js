@@ -13,6 +13,7 @@ const employeeRoutes = require("./routes/employeeroutes");
 const paymentRoutes = require("./routes/paymentroutes");
 const subscriptionRoutes = require("./routes/subscriptionroutes");
 const auditLogRoutes = require("./routes/auditlogroutes");
+const tenantRoutes = require("./routes/tenantroutes");
 
 const cors = require("cors");
 
@@ -31,6 +32,7 @@ app.use("/api/employees", employeeRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/audit-logs", auditLogRoutes);
+app.use("/api/tenants", tenantRoutes);
 
 // Connect Database
 connectDB();
