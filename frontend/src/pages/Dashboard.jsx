@@ -1,7 +1,116 @@
-
+import { useEffect, useState } from "react";
 import "./Dashboard.css";
 
 function Dashboard() {
+  const [user, setUser] = useState(null);
+
+  const [summary, setSummary] = useState({
+    totalIncome: 0,
+    totalExpense: 0,
+    balance: 0,
+  });
+
+  const [transactions, setTransactions] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const token = localStorage.getItem("token");
+
+  // ========================================
+  // LOAD USER
+  // ========================================
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
+
+  // ========================================
+  // LOAD DASHBOARD DATA
+  // ========================================
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        // -------------------------------
+        // Financial Summary
+        // -------------------------------
+
+        const summaryResponse = await fetch(
+          "http://localhost:5000/api/transactions/dashboard",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const summaryData = await summaryResponse.json();
+
+        if (!summaryResponse.ok) {
+          throw new Error(
+            summaryData.message ||
+              "Failed to load financial summary"
+          );
+        }
+
+        setSummary(summaryData.data);
+
+        // -------------------------------
+        // Recent Transactions
+        // -------------------------------
+
+        const transactionResponse = await fetch(
+          "http://localhost:5000/api/transactions?limit=5&page=1",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const transactionData =
+          await transactionResponse.json();
+
+        if (!transactionResponse.ok) {
+          throw new Error(
+            transactionData.message ||
+              "Failed to load transactions"
+          );
+        }
+
+        setTransactions(transactionData.data || []);
+
+      } catch (error) {
+        console.error(error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (token) {
+      fetchDashboardData();
+    }
+  }, [token]);
+
+  // ========================================
+  // FORMAT MONEY
+  // ========================================
+
+  const formatMoney = (amount) => {
+    return `₹${Number(amount || 0).toLocaleString(
+      "en-IN"
+    )}`;
+  };
+
   return (
     <div className="dashboard">
 
@@ -15,37 +124,74 @@ function Dashboard() {
 
         <nav className="sidebar-menu">
 
-          <a href="/dashboard" className="menu-item active">
+          <a
+            href="/dashboard"
+            className="menu-item active"
+          >
             <span>▣</span>
             Dashboard
           </a>
 
-          <a href="/tenants" className="menu-item">
+          <a
+            href="/tenants"
+            className="menu-item"
+          >
             <span>▤</span>
             Tenants
           </a>
 
-          <a href="/invoices" className="menu-item">
+          <a
+            href="/invoices"
+            className="menu-item"
+          >
             <span>▧</span>
             Invoices
           </a>
 
-          <a href="/transactions" className="menu-item">
+          <a
+            href="/transactions"
+            className="menu-item"
+          >
             <span>↔</span>
             Transactions
           </a>
 
-          <a href="/employees" className="menu-item">
+          <a
+            href="/employees"
+            className="menu-item"
+          >
             <span>👥</span>
             Employees
           </a>
 
-          <a href="/analytics" className="menu-item">
+          <a
+            href="/analytics"
+            className="menu-item"
+          >
             <span>◉</span>
             Analytics
           </a>
 
-          <a href="/settings" className="menu-item">
+         <a
+  href="/payments"
+  className="menu-item"
+>
+  <span>₹</span>
+  Payments
+</a>
+
+<a
+  href="/audit-logs"
+  className="menu-item"
+>
+  <span>◌</span>
+  Audit Logs
+</a>
+
+          <a
+            href="/settings"
+            className="menu-item"
+          >
             <span>⚙</span>
             Settings
           </a>
@@ -68,65 +214,142 @@ function Dashboard() {
 
           <div>
             <h1>Dashboard</h1>
-            <p>Welcome to LedgerGuard Admin Panel</p>
+
+            <p>
+              Welcome,{" "}
+              {user?.name || "User"}
+            </p>
           </div>
 
           <div className="admin-profile">
-            <div className="admin-circle">A</div>
+
+            <div className="admin-circle">
+              {user?.name
+                ? user.name.charAt(0).toUpperCase()
+                : "U"}
+            </div>
 
             <div>
-              <strong>Admin</strong>
-              <small>Administrator</small>
+              <strong>
+                {user?.name || "User"}
+              </strong>
+
+              <small>
+                {user?.role || "Administrator"}
+              </small>
             </div>
+
           </div>
 
         </header>
+
+
+        {/* Error */}
+        {error && (
+          <div className="error-message">
+            {error}
+          </div>
+        )}
 
 
         {/* Statistics Cards */}
         <section className="stats-grid">
 
           <div className="stat-card">
-            <div className="stat-icon">👥</div>
+
+            <div className="stat-icon">
+              💰
+            </div>
 
             <div>
-              <p>Total Tenants</p>
-              <h2>12</h2>
-              <span>Active organizations</span>
+              <p>Total Income</p>
+
+              <h2>
+                {loading
+                  ? "Loading..."
+                  : formatMoney(
+                      summary.totalIncome
+                    )}
+              </h2>
+
+              <span>
+                Total income
+              </span>
             </div>
+
           </div>
 
 
           <div className="stat-card">
-            <div className="stat-icon">📄</div>
+
+            <div className="stat-icon">
+              💸
+            </div>
 
             <div>
-              <p>Total Invoices</p>
-              <h2>48</h2>
-              <span>This month</span>
+              <p>Total Expenses</p>
+
+              <h2>
+                {loading
+                  ? "Loading..."
+                  : formatMoney(
+                      summary.totalExpense
+                    )}
+              </h2>
+
+              <span>
+                Total expenses
+              </span>
             </div>
+
           </div>
 
 
           <div className="stat-card">
-            <div className="stat-icon">↔</div>
+
+            <div className="stat-icon">
+              ↔
+            </div>
 
             <div>
               <p>Transactions</p>
-              <h2>156</h2>
-              <span>Processed successfully</span>
+
+              <h2>
+                {loading
+                  ? "..."
+                  : transactions.length}
+              </h2>
+
+              <span>
+                Recent transactions
+              </span>
             </div>
+
           </div>
 
 
           <div className="stat-card">
-            <div className="stat-icon">₹</div>
+
+            <div className="stat-icon">
+              ₹
+            </div>
 
             <div>
-              <p>Total Revenue</p>
-              <h2>₹24,500</h2>
-              <span>This month</span>
+              <p>Balance</p>
+
+              <h2>
+                {loading
+                  ? "Loading..."
+                  : formatMoney(
+                      summary.balance
+                    )}
+              </h2>
+
+              <span>
+                Income − Expenses
+              </span>
             </div>
+
           </div>
 
         </section>
@@ -138,11 +361,22 @@ function Dashboard() {
           <div className="section-header">
 
             <div>
-              <h2>Recent Transactions</h2>
-              <p>Latest billing and payment activities</p>
+              <h2>
+                Recent Transactions
+              </h2>
+
+              <p>
+                Latest financial activities
+              </p>
             </div>
 
-            <button className="view-button">
+            <button
+              className="view-button"
+              onClick={() =>
+                window.location.href =
+                  "/transactions"
+              }
+            >
               View All
             </button>
 
@@ -154,85 +388,90 @@ function Dashboard() {
             <table>
 
               <thead>
+
                 <tr>
                   <th>Transaction ID</th>
-                  <th>Tenant</th>
+                  <th>Category</th>
                   <th>Amount</th>
                   <th>Date</th>
-                  <th>Status</th>
+                  <th>Type</th>
                 </tr>
+
               </thead>
 
               <tbody>
 
-                <tr>
-                  <td>#TRX001</td>
-                  <td>ABC Enterprises</td>
-                  <td>₹5,000</td>
-                  <td>03 Sep 2026</td>
+                {loading ? (
 
-                  <td>
-                    <span className="status success">
-                      Success
-                    </span>
-                  </td>
-                </tr>
+                  <tr>
+                    <td colSpan="5">
+                      Loading transactions...
+                    </td>
+                  </tr>
 
+                ) : transactions.length === 0 ? (
 
-                <tr>
-                  <td>#TRX002</td>
-                  <td>XYZ Solutions</td>
-                  <td>₹3,500</td>
-                  <td>03 Sep 2026</td>
+                  <tr>
+                    <td colSpan="5">
+                      No transactions found.
+                    </td>
+                  </tr>
 
-                  <td>
-                    <span className="status success">
-                      Success
-                    </span>
-                  </td>
-                </tr>
+                ) : (
 
+                  transactions.map(
+                    (transaction) => (
 
-                <tr>
-                  <td>#TRX003</td>
-                  <td>TechNova Pvt Ltd</td>
-                  <td>₹7,200</td>
-                  <td>02 Sep 2026</td>
+                      <tr
+                        key={transaction._id}
+                      >
 
-                  <td>
-                    <span className="status pending">
-                      Pending
-                    </span>
-                  </td>
-                </tr>
+                        <td>
+                          #
+                          {transaction._id.slice(
+                            -6
+                          ).toUpperCase()}
+                        </td>
 
+                        <td>
+                          {transaction.category}
+                        </td>
 
-                <tr>
-                  <td>#TRX004</td>
-                  <td>Global Industries</td>
-                  <td>₹4,800</td>
-                  <td>02 Sep 2026</td>
+                        <td>
+                          {formatMoney(
+                            transaction.amount
+                          )}
+                        </td>
 
-                  <td>
-                    <span className="status success">
-                      Success
-                    </span>
-                  </td>
-                </tr>
+                        <td>
+                          {transaction.createdAt
+                            ? new Date(
+                                transaction.createdAt
+                              ).toLocaleDateString(
+                                "en-IN"
+                              )
+                            : "-"}
+                        </td>
 
+                        <td>
+                          <span
+                            className={
+                              transaction.type ===
+                              "income"
+                                ? "status success"
+                                : "status failed"
+                            }
+                          >
+                            {transaction.type}
+                          </span>
+                        </td>
 
-                <tr>
-                  <td>#TRX005</td>
-                  <td>Smart Systems</td>
-                  <td>₹2,900</td>
-                  <td>01 Sep 2026</td>
+                      </tr>
 
-                  <td>
-                    <span className="status failed">
-                      Failed
-                    </span>
-                  </td>
-                </tr>
+                    )
+                  )
+
+                )}
 
               </tbody>
 
@@ -249,26 +488,51 @@ function Dashboard() {
           <div className="content-card small-card">
 
             <div className="card-title">
-              <h2>Invoice Overview</h2>
-              <span>September 2026</span>
+
+              <h2>
+                Financial Overview
+              </h2>
+
+              <span>
+                Current
+              </span>
+
             </div>
 
-
             <div className="invoice-row">
-              <span>Paid Invoices</span>
-              <strong>32</strong>
+              <span>
+                Total Income
+              </span>
+
+              <strong>
+                {formatMoney(
+                  summary.totalIncome
+                )}
+              </strong>
             </div>
 
-
             <div className="invoice-row">
-              <span>Pending Invoices</span>
-              <strong>10</strong>
+              <span>
+                Total Expenses
+              </span>
+
+              <strong>
+                {formatMoney(
+                  summary.totalExpense
+                )}
+              </strong>
             </div>
 
-
             <div className="invoice-row">
-              <span>Overdue Invoices</span>
-              <strong>6</strong>
+              <span>
+                Balance
+              </span>
+
+              <strong>
+                {formatMoney(
+                  summary.balance
+                )}
+              </strong>
             </div>
 
           </div>
@@ -277,8 +541,15 @@ function Dashboard() {
           <div className="content-card small-card">
 
             <div className="card-title">
-              <h2>System Status</h2>
-              <span>Live</span>
+
+              <h2>
+                System Status
+              </h2>
+
+              <span>
+                Live
+              </span>
+
             </div>
 
 
@@ -287,8 +558,15 @@ function Dashboard() {
               <span className="online-dot"></span>
 
               <div>
-                <strong>All Systems Operational</strong>
-                <p>Backend API is running normally</p>
+
+                <strong>
+                  Backend API
+                </strong>
+
+                <p>
+                  Connected
+                </p>
+
               </div>
 
             </div>
@@ -299,8 +577,15 @@ function Dashboard() {
               <span className="online-dot"></span>
 
               <div>
-                <strong>Database Connected</strong>
-                <p>MongoDB connection active</p>
+
+                <strong>
+                  MongoDB
+                </strong>
+
+                <p>
+                  Financial data available
+                </p>
+
               </div>
 
             </div>
@@ -316,4 +601,3 @@ function Dashboard() {
 }
 
 export default Dashboard;
-

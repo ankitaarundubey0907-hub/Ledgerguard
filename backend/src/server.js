@@ -6,6 +6,12 @@ const authRoutes = require("./routes/authroutes");
 const transactionRoutes = require("./routes/transactionroutes");
 const userRoutes = require("./routes/userroutes");
 const employeeRoutes = require("./routes/employeeroutes");
+
+
+const paymentRoutes = require("./routes/paymentroutes");
+const subscriptionRoutes = require("./routes/subscriptionroutes");
+const auditLogRoutes = require("./routes/auditlogroutes");
+
 const tenantRoutes = require("./routes/tenantroutes");
 
 const cors = require("cors");
@@ -60,7 +66,19 @@ app.use("/api/auth", authRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/employees", employeeRoutes);
+
 app.use("/api/tenants", tenantRoutes);
+
+app.use("/api/payment", paymentRoutes);
+app.use("/api/subscriptions", subscriptionRoutes);
+app.use("/api/audit-logs", auditLogRoutes);
+app.use("/api/tenants", tenantRoutes);
+
+// Connect Database
+connectDB();
+//connect redis
+connectRedis();
+
 
 // Health Check
 app.get("/health", (req, res) => {
