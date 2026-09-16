@@ -15,14 +15,14 @@ const employeeSchema = new mongoose.Schema({
     },
 
     phone: {
-        type: String,
+        type: String,//ljj
         trim: true
     },
 
     role: {
         type: String,
         required: true,
-        trim: true
+        trim: true//okdone
     },
 
     department: {
