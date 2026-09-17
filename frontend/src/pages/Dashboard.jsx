@@ -15,6 +15,9 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Profile dropdown
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
   const token = localStorage.getItem("token");
 
   // ========================================
@@ -87,7 +90,6 @@ function Dashboard() {
         }
 
         setTransactions(transactionData.data || []);
-
       } catch (error) {
         console.error(error);
         setError(error.message);
@@ -100,6 +102,17 @@ function Dashboard() {
       fetchDashboardData();
     }
   }, [token]);
+
+  // ========================================
+  // LOGOUT
+  // ========================================
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    window.location.href = "/login";
+  };
 
   // ========================================
   // FORMAT MONEY
@@ -172,21 +185,29 @@ function Dashboard() {
             Analytics
           </a>
 
-         <a
-  href="/payments"
-  className="menu-item"
->
-  <span>₹</span>
-  Payments
-</a>
+          <a
+            href="/notifications"
+            className="menu-item"
+          >
+            <span>🔔</span>
+            Notifications
+          </a>
 
-<a
-  href="/audit-logs"
-  className="menu-item"
->
-  <span>◌</span>
-  Audit Logs
-</a>
+          <a
+            href="/payments"
+            className="menu-item"
+          >
+            <span>₹</span>
+            Payments
+          </a>
+
+          <a
+            href="/audit-logs"
+            className="menu-item"
+          >
+            <span>◌</span>
+            Audit Logs
+          </a>
 
           <a
             href="/settings"
@@ -221,23 +242,103 @@ function Dashboard() {
             </p>
           </div>
 
-          <div className="admin-profile">
 
-            <div className="admin-circle">
-              {user?.name
-                ? user.name.charAt(0).toUpperCase()
-                : "U"}
-            </div>
+          {/* ========================================
+              CLICKABLE PROFILE
+          ======================================== */}
 
-            <div>
-              <strong>
-                {user?.name || "User"}
-              </strong>
+          <div className="profile-wrapper">
 
-              <small>
-                {user?.role || "Administrator"}
-              </small>
-            </div>
+            <button
+              className="admin-profile"
+              onClick={() =>
+                setShowProfileMenu(
+                  !showProfileMenu
+                )
+              }
+            >
+
+              <div className="admin-circle">
+                {user?.name
+                  ? user.name
+                      .charAt(0)
+                      .toUpperCase()
+                  : "U"}
+              </div>
+
+              <div className="profile-info">
+
+                <strong>
+                  {user?.name || "User"}
+                </strong>
+
+                <small>
+                  {user?.role ||
+                    "Administrator"}
+                </small>
+
+              </div>
+
+              <span className="profile-arrow">
+                {showProfileMenu ? "▲" : "▼"}
+              </span>
+
+            </button>
+
+
+            {/* Profile Dropdown */}
+
+            {showProfileMenu && (
+
+              <div className="profile-dropdown">
+
+                <a
+                  href="/profile"
+                  className="profile-dropdown-item"
+                >
+                  <span>👤</span>
+                  <div>
+                    <strong>Profile</strong>
+                    <small>
+                      View your profile
+                    </small>
+                  </div>
+                </a>
+
+
+                <a
+                  href="/settings"
+                  className="profile-dropdown-item"
+                >
+                  <span>⚙️</span>
+                  <div>
+                    <strong>Settings</strong>
+                    <small>
+                      Manage your settings
+                    </small>
+                  </div>
+                </a>
+
+
+                <div className="profile-divider"></div>
+
+
+                <button
+                  className="profile-dropdown-item logout-item"
+                  onClick={handleLogout}
+                >
+                  <span>🚪</span>
+                  <div>
+                    <strong>Logout</strong>
+                    <small>
+                      Sign out of LedgerGuard
+                    </small>
+                  </div>
+                </button>
+
+              </div>
+
+            )}
 
           </div>
 

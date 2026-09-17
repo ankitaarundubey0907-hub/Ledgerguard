@@ -1,17 +1,17 @@
 
-
-
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
+import Profile from "./pages/Profile";
 import Tenants from "./pages/Tenants";
 import Invoices from "./pages/Invoices";
 import Transactions from "./pages/Transactions";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import Employees from "./pages/Employees";
+import Notifications from "./pages/Notifications";
 import Payment from "./pages/Payment";
 import AuditLogs from "./pages/AuditLogs";
 
@@ -22,7 +22,10 @@ function App() {
     <BrowserRouter>
       <Routes>
 
-        {/* Default */}
+        {/* ========================================
+            DEFAULT
+        ======================================== */}
+
         <Route
           path="/"
           element={
@@ -32,7 +35,11 @@ function App() {
           }
         />
 
-        {/* Authentication */}
+
+        {/* ========================================
+            AUTHENTICATION
+        ======================================== */}
+
         <Route
           path="/login"
           element={<Login />}
@@ -43,7 +50,11 @@ function App() {
           element={<Register />}
         />
 
-        {/* Dashboard */}
+
+        {/* ========================================
+            DASHBOARD
+        ======================================== */}
+
         <Route
           path="/dashboard"
           element={
@@ -53,7 +64,25 @@ function App() {
           }
         />
 
-        {/* Other pages */}
+
+        {/* ========================================
+            PROFILE
+        ======================================== */}
+
+        <Route
+          path="/profile"
+          element={
+            token
+              ? <Profile />
+              : <Navigate to="/login" replace />
+          }
+        />
+
+
+        {/* ========================================
+            TENANTS
+        ======================================== */}
+
         <Route
           path="/tenants"
           element={
@@ -62,6 +91,11 @@ function App() {
               : <Navigate to="/login" replace />
           }
         />
+
+
+        {/* ========================================
+            INVOICES
+        ======================================== */}
 
         <Route
           path="/invoices"
@@ -72,6 +106,11 @@ function App() {
           }
         />
 
+
+        {/* ========================================
+            TRANSACTIONS
+        ======================================== */}
+
         <Route
           path="/transactions"
           element={
@@ -80,6 +119,11 @@ function App() {
               : <Navigate to="/login" replace />
           }
         />
+
+
+        {/* ========================================
+            EMPLOYEES
+        ======================================== */}
 
         <Route
           path="/employees"
@@ -90,6 +134,11 @@ function App() {
           }
         />
 
+
+        {/* ========================================
+            ANALYTICS
+        ======================================== */}
+
         <Route
           path="/analytics"
           element={
@@ -99,11 +148,53 @@ function App() {
           }
         />
 
-         <Route path="/payments" element={<Payment />} />
-         <Route
-  path="/audit-logs"
-  element={<AuditLogs />}
-/>
+
+        {/* ========================================
+            NOTIFICATIONS
+        ======================================== */}
+
+        <Route
+          path="/notifications"
+          element={
+            token
+              ? <Notifications />
+              : <Navigate to="/login" replace />
+          }
+        />
+
+
+        {/* ========================================
+            PAYMENTS
+        ======================================== */}
+
+        <Route
+          path="/payments"
+          element={
+            token
+              ? <Payment />
+              : <Navigate to="/login" replace />
+          }
+        />
+
+
+        {/* ========================================
+            AUDIT LOGS
+        ======================================== */}
+
+        <Route
+          path="/audit-logs"
+          element={
+            token
+              ? <AuditLogs />
+              : <Navigate to="/login" replace />
+          }
+        />
+
+
+        {/* ========================================
+            SETTINGS
+        ======================================== */}
+
         <Route
           path="/settings"
           element={
@@ -113,12 +204,11 @@ function App() {
           }
         />
 
-         <Route
-  path="/payments"
-  element={<Payment />}
-/>
 
-        {/* Unknown route */}
+        {/* ========================================
+            UNKNOWN ROUTE
+        ======================================== */}
+
         <Route
           path="*"
           element={<Navigate to="/" replace />}

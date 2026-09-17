@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -12,6 +13,9 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
 
+    // Prevent multiple login requests
+    if (loading) return;
+
     setError("");
     setLoading(true);
 
@@ -24,7 +28,7 @@ function Login() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            email,
+            email: email.trim(),
             password,
           }),
         }
@@ -32,23 +36,41 @@ function Login() {
 
       const data = await response.json();
 
+      console.log("Login response:", data);
+
       if (!response.ok) {
         throw new Error(data.message || "Login failed");
       }
 
-      // Store authentication information
-      localStorage.setItem("token", data.data.token);
-      localStorage.setItem(
-        "user",
-        JSON.stringify(data.data.user)
-      );
+      const token = data?.data?.token;
+      const user = data?.data?.user;
 
-      // Go to dashboard
-      navigate("/dashboard");
+      if (!token) {
+        throw new Error("Login succeeded, but authentication token was not received.");
+      }
+
+      // Store authentication information
+      localStorage.setItem("token", token);
+
+      if (user) {
+        localStorage.setItem("user", JSON.stringify(user));
+      }
+
+      // Verify token was actually stored
+      const savedToken = localStorage.getItem("token");
+
+      if (!savedToken) {
+        throw new Error("Unable to save login session.");
+      }
+
+      console.log("Login successful. Token saved.");
+
+      // Navigate only after successful storage
+      navigate("/dashboard", { replace: true });
 
     } catch (error) {
-      console.error(error);
-      setError(error.message);
+      console.error("Login error:", error);
+      setError(error.message || "Unable to login. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -83,6 +105,7 @@ function Login() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            disabled={loading}
           />
 
           <label>Password</label>
@@ -93,6 +116,7 @@ function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            disabled={loading}
           />
 
           <button

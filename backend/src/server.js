@@ -1,18 +1,18 @@
+require("dotenv").config();
+
 const express = require("express");
-const dotenv = require("dotenv");
 const connectDB = require("./config/db");
+const { connectRedis } = require("./config/redis");
 
 const authRoutes = require("./routes/authroutes");
 const transactionRoutes = require("./routes/transactionroutes");
 const userRoutes = require("./routes/userroutes");
 const employeeRoutes = require("./routes/employeeroutes");
-
-
 const paymentRoutes = require("./routes/paymentroutes");
 const subscriptionRoutes = require("./routes/subscriptionroutes");
 const auditLogRoutes = require("./routes/auditlogroutes");
-
 const tenantRoutes = require("./routes/tenantroutes");
+const invoiceRoutes = require("./routes/invoiceroutes");
 
 const cors = require("cors");
 const http = require("http");
@@ -25,10 +25,7 @@ const {
 } = require("./middleware/ratelimitmiddleware");
 
 const errorMiddleware = require("./middleware/errormiddleware");
-
 const swaggerSpec = require("./swagger");
-
-dotenv.config();
 
 const app = express();
 
@@ -39,7 +36,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
         origin: "*",
-        methods: ["GET", "POST", "PUT", "DELETE"]
+        methods: ["GET", "POST", "PUT", "PATCH", "DELETE"]
     }
 });
 
@@ -66,19 +63,17 @@ app.use("/api/auth", authRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/employees", employeeRoutes);
-
 app.use("/api/tenants", tenantRoutes);
-
+app.use("/api/invoices", invoiceRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/audit-logs", auditLogRoutes);
-app.use("/api/tenants", tenantRoutes);
 
 // Connect Database
 connectDB();
-//connect redis
-connectRedis();
 
+// Connect Redis
+connectRedis();
 
 // Health Check
 app.get("/health", (req, res) => {
@@ -98,10 +93,10 @@ io.on("connection", (socket) => {
     const tenantId = socket.handshake.auth.tenantId;
 
     if (tenantId) {
-        socket.join(`tenant:${tenantId}`);
+        socket.join("tenant:" + tenantId);
 
         console.log(
-            `Socket joined tenant room: tenant:${tenantId}`
+            "Socket joined tenant:" + tenantId
         );
     } else {
         console.log(
@@ -118,13 +113,10 @@ io.on("connection", (socket) => {
     });
 });
 
-// Connect Database
-connectDB();
-
-const port = process.env.port || 5000;
+const port = process.env.PORT || 5000;
 
 server.listen(port, () => {
     console.log(
-        `LedgerGuard server running on port ${port}`
+        "LedgerGuard server running on port " + port
     );
 });
