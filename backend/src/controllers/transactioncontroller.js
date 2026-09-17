@@ -477,7 +477,7 @@ const deleteTransaction = async (req, res) => {
 };
 
 // FINANCIAL SUMMARY
-
+//ok
 
 const getFinancialSummary = async (req, res) => {
     try {
